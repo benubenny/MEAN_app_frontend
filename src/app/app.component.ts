@@ -1,13 +1,42 @@
+// src/app/app.component.ts
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { AuthService } from './services/auth.service';
+import { Router } from '@angular/router';
+import { HttpClientModule } from '@angular/common/http';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet],
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  imports: [
+    CommonModule,
+    RouterModule,
+    HttpClientModule
+  ],
+  template: `
+    <div class="app-container">
+      <nav *ngIf="authService.isLoggedIn()" class="nav-bar">
+        <div class="nav-brand">Todo App</div>
+        <div class="nav-items">
+          <button (click)="logout()" class="logout-btn">Logout</button>
+        </div>
+      </nav>
+      <div class="main-content">
+        <router-outlet></router-outlet>
+      </div>
+    </div>
+  `,
+  styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  title = 'todo-app';
+  constructor(
+    public authService: AuthService,
+    private router: Router
+  ) {}
+
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/login']);
+  }
 }
