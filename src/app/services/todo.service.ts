@@ -1,8 +1,8 @@
 // src/app/services/todo.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, tap } from 'rxjs/operators';
 import { Todo } from '../models/todo';
 import { AuthService } from './auth.service';
 import { environment } from '../../environments/environment';
@@ -20,31 +20,66 @@ export class TodoService {
 
   private getHeaders(): HttpHeaders {
     const token = this.authService.getToken();
-    return new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    return new HttpHeaders()
+      .set('Authorization', `Bearer ${token}`)
+      .set('Content-Type', 'application/json');
   }
 
   getTodos(): Observable<Todo[]> {
     return this.http.get<Todo[]>(this.apiUrl, { headers: this.getHeaders() })
-      .pipe(catchError(this.handleError));
+      .pipe(
+        tap(todos => console.log('Fetched todos:', todos)),
+        catchError(this.handleError)
+      );
   }
 
   createTodo(todo: Todo): Observable<Todo> {
     return this.http.post<Todo>(this.apiUrl, todo, { headers: this.getHeaders() })
-      .pipe(catchError(this.handleError));
+      .pipe(
+        tap(newTodo => console.log('Created todo:', newTodo)),
+        catchError(this.handleError)
+      );
   }
 
   updateTodo(id: string, todo: Todo): Observable<Todo> {
-    return this.http.put<Todo>(`${this.apiUrl}/${id}`, todo, { headers: this.getHeaders() })
-      .pipe(catchError(this.handleError));
+    const url = `${this.apiUrl}/${id}`;
+    console.log('Updating todo at URL:', url, 'with data:', todo);
+    return this.http.put<Todo>(url, todo, { headers: this.getHeaders() })
+      .pipe(
+        tap(updatedTodo => console.log('Updated todo:', updatedTodo)),
+        catchError(this.handleError)
+      );
   }
 
   deleteTodo(id: string): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${id}`, { headers: this.getHeaders() })
-      .pipe(catchError(this.handleError));
+    const url = `${this.apiUrl}/${id}`;
+    return this.http.delete(url, { headers: this.getHeaders() })
+      .pipe(
+        tap(() => console.log('Deleted todo:', id)),
+        catchError(this.handleError)
+      );
   }
 
-  private handleError(error: any) {
+  private handleError(error: HttpErrorResponse) {
     console.error('An error occurred:', error);
-    return throwError(() => 'Something went wrong; please try again later.');
+    let errorMessage = 'An error occurred. Please try again later.';
+    
+    if (error.error instanceof ErrorEvent) {
+      // Client-side error
+      errorMessage = error.error.message;
+    } else {
+      // Backend error
+      if (error.status === 401) {
+        errorMessage = 'Please login again.';
+      } else if (error.status === 404) {
+        errorMessage = 'Todo not found.';
+      } else if (error.status === 500) {
+        errorMessage = 'Server error. Please try again later.';
+      }
+      console.error(
+        `Backend returned code ${error.status}, ` +
+        `body was: ${JSON.stringify(error.error)}`);
+    }
+    return throwError(() => errorMessage);
   }
 }

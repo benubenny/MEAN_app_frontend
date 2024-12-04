@@ -38,18 +38,28 @@ export class TodoListComponent implements OnInit {
             }
         });
     }
-
-    onToggleComplete(todo: Todo) {
-        const updatedTodo = { ...todo, completed: !todo.completed };
-        this.todoService.updateTodo(todo._id!, updatedTodo).subscribe({
-            next: (updated) => {
-                this.todos = this.todos.map(t => t._id === updated._id ? updated : t);
-            },
-            error: (error) => {
-                this.error = 'Failed to update todo';
-            }
-        });
-    }
+    
+onToggleComplete(todo: Todo) {
+    const updatedTodo = { 
+      ...todo, 
+      completed: !todo.completed 
+    };
+    
+    console.log('Attempting to update todo:', updatedTodo);
+    
+    this.todoService.updateTodo(todo._id!, updatedTodo).subscribe({
+      next: (updated) => {
+        console.log('Successfully updated todo:', updated);
+        this.todos = this.todos.map(t => 
+          t._id === updated._id ? updated : t
+        );
+      },
+      error: (error) => {
+        console.error('Failed to update todo:', error);
+        this.error = typeof error === 'string' ? error : 'Failed to update todo';
+      }
+    });
+  }
 
     onDelete(todoId: string) {
         if (confirm('Are you sure you want to delete this todo?')) {
