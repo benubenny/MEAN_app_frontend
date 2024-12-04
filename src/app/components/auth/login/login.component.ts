@@ -20,7 +20,6 @@ import { CommonModule } from '@angular/common';
                         id="email" 
                         formControlName="email" 
                         class="form-control"
-                        [class.is-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
                         placeholder="Enter your email">
                     <div class="error" *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.errors?.['required']">
                         Email is required
@@ -37,7 +36,6 @@ import { CommonModule } from '@angular/common';
                         id="password" 
                         formControlName="password" 
                         class="form-control"
-                        [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
                         placeholder="Enter your password">
                     <div class="error" *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.errors?.['required']">
                         Password is required
@@ -46,9 +44,10 @@ import { CommonModule } from '@angular/common';
 
                 <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
 
-                <button type="submit" [disabled]="loginForm.invalid || loading">
+                <button type="submit" [disabled]="loginForm.invalid || loading" class="submit-btn">
                     {{ loading ? 'Logging in...' : 'Login' }}
                 </button>
+                
                 <p class="register-link">
                     Don't have an account? <a routerLink="/register">Register here</a>
                 </p>
@@ -56,22 +55,99 @@ import { CommonModule } from '@angular/common';
         </div>
     `,
     styles: [`
-        /* ... keep your existing styles ... */
-        
-        .is-invalid {
-            border-color: #dc3545;
+        .login-container {
+            max-width: 400px;
+            margin: 2rem auto;
+            padding: 2rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background: white;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: background-color 0.2s;
+        }
+
+        .submit-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .submit-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
         }
 
         .alert {
             padding: 0.75rem;
-            margin-bottom: 1rem;
+            margin: 1rem 0;
             border-radius: 4px;
+            font-size: 0.9rem;
         }
 
         .alert-danger {
             background-color: #f8d7da;
             border: 1px solid #f5c6cb;
             color: #721c24;
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: #666;
+        }
+
+        .register-link a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .register-link a:hover {
+            text-decoration: underline;
         }
     `]
 })
