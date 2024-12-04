@@ -20,6 +20,7 @@ import { CommonModule } from '@angular/common';
                         id="email" 
                         formControlName="email" 
                         class="form-control"
+                        [class.is-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
                         placeholder="Enter your email">
                     <div class="error" *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.errors?.['required']">
                         Email is required
@@ -36,15 +37,18 @@ import { CommonModule } from '@angular/common';
                         id="password" 
                         formControlName="password" 
                         class="form-control"
+                        [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
                         placeholder="Enter your password">
                     <div class="error" *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.errors?.['required']">
                         Password is required
                     </div>
                 </div>
 
-                <div class="error-message" *ngIf="error">{{ error }}</div>
+                <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
 
-                <button type="submit" [disabled]="loginForm.invalid">Login</button>
+                <button type="submit" [disabled]="loginForm.invalid || loading">
+                    {{ loading ? 'Logging in...' : 'Login' }}
+                </button>
                 <p class="register-link">
                     Don't have an account? <a routerLink="/register">Register here</a>
                 </p>
@@ -52,92 +56,29 @@ import { CommonModule } from '@angular/common';
         </div>
     `,
     styles: [`
-        .login-container {
-            max-width: 400px;
-            margin: 2rem auto;
-            padding: 2rem;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        /* ... keep your existing styles ... */
+        
+        .is-invalid {
+            border-color: #dc3545;
         }
 
-        h2 {
-            text-align: center;
-            margin-bottom: 2rem;
-            color: #333;
-        }
-
-        .form-group {
+        .alert {
+            padding: 0.75rem;
             margin-bottom: 1rem;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: #666;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #ddd;
             border-radius: 4px;
-            font-size: 1rem;
         }
 
-        .form-control:focus {
-            outline: none;
-            border-color: #007bff;
-            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
-        }
-
-        button {
-            width: 100%;
-            padding: 0.75rem;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 1rem;
-            cursor: pointer;
-            margin-top: 1rem;
-        }
-
-        button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
-
-        .error {
-            color: #dc3545;
-            font-size: 0.875rem;
-            margin-top: 0.25rem;
-        }
-
-        .error-message {
-            color: #dc3545;
-            text-align: center;
-            margin: 1rem 0;
-        }
-
-        .register-link {
-            text-align: center;
-            margin-top: 1rem;
-        }
-
-        .register-link a {
-            color: #007bff;
-            text-decoration: none;
-        }
-
-        .register-link a:hover {
-            text-decoration: underline;
+        .alert-danger {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
         }
     `]
 })
 export class LoginComponent {
     loginForm: FormGroup;
     error: string = '';
+    loading: boolean = false;
 
     constructor(
         private fb: FormBuilder,
@@ -152,13 +93,22 @@ export class LoginComponent {
 
     onSubmit() {
         if (this.loginForm.valid) {
+            this.loading = true;
+            this.error = '';
+            
             const { email, password } = this.loginForm.value;
             this.authService.login(email, password).subscribe({
-                next: () => {
+                next: (response) => {
+                    console.log('Login successful:', response);
                     this.router.navigate(['/todos']);
                 },
                 error: (err) => {
-                    this.error = err.error.message || 'Login failed';
+                    console.error('Login error:', err);
+                    this.error = err.message || 'Login failed. Please check your credentials.';
+                    this.loading = false;
+                },
+                complete: () => {
+                    this.loading = false;
                 }
             });
         }
