@@ -1,8 +1,8 @@
-<!-- // src/app/components/todos/todo-list/todo-list.component.html -->
+<!-- src/app/components/todos/todo-list/todo-list.component.html -->
 <div class="todo-list-container">
   <div class="header">
     <h2>My Todo List</h2>
-    <button (click)="showForm = true" *ngIf="!showForm" class="add-button">
+    <button (click)="onAddNewClick()" *ngIf="!showForm" class="add-button">
       Add New Todo
     </button>
   </div>
@@ -13,8 +13,8 @@
     *ngIf="showForm"
     [todo]="selectedTodo"
     (todoAdded)="onTodoAdded($event)"
-    (todoUpdated)="onTodoUpdated($any($event))"
-    (cancelled)="showForm = false; selectedTodo = null">
+    (todoUpdated)="onTodoUpdated($event)"
+    (cancelled)="onCancel()">
   </app-todo-form>
 
   <div class="loading" *ngIf="loading">Loading todos...</div>
@@ -42,4 +42,3 @@
     </div>
   </div>
 </div>
-

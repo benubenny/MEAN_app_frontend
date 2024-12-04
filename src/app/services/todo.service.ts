@@ -41,15 +41,17 @@ export class TodoService {
       );
   }
 
-  updateTodo(id: string, todo: Todo): Observable<Todo> {
-    const url = `${this.apiUrl}/${id}`;
-    console.log('Updating todo at URL:', url, 'with data:', todo);
-    return this.http.put<Todo>(url, todo, { headers: this.getHeaders() })
-      .pipe(
-        tap(updatedTodo => console.log('Updated todo:', updatedTodo)),
-        catchError(this.handleError)
-      );
-  }
+updateTodo(id: string, todo: Todo): Observable<Todo> {
+  const url = `${this.apiUrl}/${id}`;
+  return this.http.put<Todo>(url, todo, { headers: this.getHeaders() })
+    .pipe(
+      tap(updatedTodo => console.log('Updated todo:', updatedTodo)),
+      catchError(error => {
+        console.error('Error updating todo:', error);
+        return throwError(() => 'Failed to update todo');
+      })
+    );
+}
 
   deleteTodo(id: string): Observable<any> {
     const url = `${this.apiUrl}/${id}`;

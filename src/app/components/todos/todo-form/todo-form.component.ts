@@ -1,5 +1,4 @@
-// src/app/components/todos/todo-form/todo-form.component.ts
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -11,7 +10,7 @@ import { Todo } from '../../../models/todo';
   imports: [CommonModule, ReactiveFormsModule, RouterModule],
   template: `
     <div class="todo-form-container">
-      <h2>{{ todo ? 'Edit Todo' : 'Add New Todo' }}</h2>
+      <h2>{{ isEditMode ? 'Edit Todo' : 'Add New Todo' }}</h2>
       <form [formGroup]="todoForm" (ngSubmit)="onSubmit()">
         <div class="form-group">
           <label for="title">Title</label>
@@ -46,8 +45,8 @@ import { Todo } from '../../../models/todo';
         </div>
 
         <div class="button-group">
-          <button type="submit" class="btn btn-primary">
-            {{ todo ? 'Update' : 'Add' }} Todo
+          <button type="submit" class="btn btn-primary" [disabled]="!todoForm.valid">
+            {{ isEditMode ? 'Update' : 'Add' }} Todo
           </button>
           <button type="button" class="btn btn-secondary" (click)="onCancel()">
             Cancel
@@ -130,15 +129,21 @@ import { Todo } from '../../../models/todo';
     .btn:hover {
       opacity: 0.9;
     }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
   `]
 })
-export class TodoFormComponent {
+export class TodoFormComponent implements OnInit {
   @Input() todo: Todo | null = null;
   @Output() todoAdded = new EventEmitter<Todo>();
   @Output() todoUpdated = new EventEmitter<Todo>();
   @Output() cancelled = new EventEmitter<void>();
 
   todoForm: FormGroup;
+  isEditMode: boolean = false;
 
   constructor(private fb: FormBuilder) {
     this.todoForm = this.fb.group({
@@ -149,23 +154,42 @@ export class TodoFormComponent {
   }
 
   ngOnInit() {
+    this.todoForm.reset();
     if (this.todo) {
-      this.todoForm.patchValue(this.todo);
+      this.isEditMode = true;
+      this.todoForm.patchValue({
+        title: this.todo.title,
+        description: this.todo.description || '',
+        completed: this.todo.completed || false
+      });
+    } else {
+      this.isEditMode = false;
+      this.todoForm.reset({
+        title: '',
+        description: '',
+        completed: false
+      });
     }
   }
 
   onSubmit() {
     if (this.todoForm.valid) {
-      if (this.todo?._id) {
-        this.todoUpdated.emit({ ...this.todo, ...this.todoForm.value });
+      const formValue = this.todoForm.value;
+      if (this.isEditMode && this.todo?._id) {
+        this.todoUpdated.emit({
+          _id: this.todo._id,
+          title: formValue.title,
+          description: formValue.description,
+          completed: formValue.completed
+        });
       } else {
-        this.todoAdded.emit(this.todoForm.value);
+        this.todoAdded.emit(formValue);
       }
-      this.todoForm.reset({ completed: false });
     }
   }
 
   onCancel() {
+    this.todoForm.reset();
     this.cancelled.emit();
   }
 }
